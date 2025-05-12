@@ -19,21 +19,29 @@ to creat the synthetic datasets with the length of 1000 and the peroid of 16.
 
 ## Discrete cosine similarity (DCS)
 
-![](./pic/DCS.png)
+![](./pic/dca.png)
+
+![](./pic/modelxy.png)
+
+Let the CS series be denoted by $\boldsymbol{Y} = \{y_i\}_{1\leq i \leq L-2\tau+1}$, where $y_i$ denotes the $i$-th CS value computed from the original series. With this scheme, we expect a smaller $y_i$ if change points exist in [$\boldsymbol{\tilde{X_i}}, \boldsymbol{\tilde{X}_{i+\tau}}$]. Similarly,  $x_i$ is involved in calculating the elements in $\boldsymbol{\tilde{Y_i}}$, which means when we observe that a certain number of smaller $y$ in $\boldsymbol{\tilde{Y_i}}$, chances are that $x_i$ is a change point. $\boldsymbol{\tilde{S}_i}$ denotes the set of elements required to compute each CS value in $\boldsymbol{\tilde{Y}_i}$, which includes all elements ${x_j}$ such that $i - 2\tau + 1 \leq j \leq i + 2\tau - 1$. 
 
 ## DCS-CPD
 
 The function to detect the change points is defined in **DCS_CPD.py**. 
 
-## Illustration of DCS-CPD for synthetic series.
+## Illustration of DCS-CPD for real-world datasets. 
 
-![](./pic/exp_plotmvp.png)
-
-As shown in (a), changes in mean, variance, and period were introduced at position $n=100$, respectively. With the threshold $p_t = 0.1$, (b) displays the corresponding DCS series along with the DCS threshold $y_t$. (c) presents the confidence curve derived from the $y_t$. 
+![](./pic/exp_realworld2.png)
 
 ## Experiment results
 
-![](./pic/result_detection.png)
+![](./pic/exp_detection.png)
 
-![](./pic/result_slimness.png)
+![](./pic/exp_detection_real.png)
+
+## Time efficiency
+
+DCS-CPD has a complexity of $\mathcal{O}(\tau L)$. 
+
+![](./pic/exp_time2.png)
 
