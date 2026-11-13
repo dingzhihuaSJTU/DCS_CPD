@@ -1,47 +1,39 @@
-# Change Point Detection in Time Series via Discrete Cosine Similarity with Confidence Level Estimation
+# 复现代码说明
 
-## Introduction
+本目录包含论文全部数值结果的生成脚本与结果文件。所有脚本只依赖 numpy / scipy / pandas / matplotlib / ruptures，无 GPU、无网络、无随机外部数据。
 
-This paper introduces DCS-CPD, a novel method for change point detection in time series using cosine similarity. The method constructs a cosine similarity series that represents the statistical properties of the original series, allowing for the detection of change points. When no change points are present, the series follows a specific distribution, while deviations indicate potential change points. 
-DCS-CPD derives the relationship between the change point probability and cosine similarity, enabling precise localization and probability estimation. Compared to traditional methods, DCS-CPD offers superior computational efficiency and broader applicability. Experiments on synthetic and real-world datasets validate its accuracy, robustness, and ability to provide reliable probability estimates for detected change points. 
+## 文件职责
 
-## Synthetic Datasets
+| 文件 | 职责 |
+|---|---|
+| `dcs_cpd.py` | DCS-CPD 参考实现。函数与论文公式一一对应：`cosine_series`↔式(4)，`threshold`↔式(12)，`score_constants`/`critical_count`↔式(25)(26)(33)，`score_curve`↔式(13)(34)，`localize`↔算法 2 |
+| `baselines.py` | 18 个基线。ruptures 的 12 个（4 方法 × 3 代价），加 MOSUM、移动相关、CUSUM、BOCPD |
+| `metrics.py` | 一对一匹配的 precision/recall/F1 与定位误差 |
+| `synthetic.py` | 四族突变生成器：level / polarity / phase / period，噪声方差按 SNR 定义设置 |
+| `run_synthetic.py` | 主实验，输出 `results/synthetic.csv` |
+| `run_real.py` | 真实数据实验（TCPD 六条 + HASC），输出 `results/real.csv` |
+| `run_support.py` | 五个子命令：`runtime` / `sensitivity` / `null` / `calibration` / `period` |
+| `run_approx.py` | 零分布矩与尾概率的预测/实测对照，输出 `results/approx.csv` |
+| `make_figures.py` | 生成 `figs/score_example.pdf`、`period_sweep.pdf`、`runtime.pdf` |
 
-The synthetic datasets are crafted by **CraftedData.py**. 
+## 结果文件与论文表格的对应
 
-Run 
+| 论文位置 | 结果文件 | 生成命令 |
+|---|---|---|
+| 表 4（合成主表） | `results/synthetic.csv` | `run_synthetic.py --reps 15` |
+| 表 5（真实数据） | `results/real.csv` | `run_real.py` |
+| 表 2（近似矩） | `results/approx.csv` | `run_approx.py` |
+| 表 3（尾概率） | `results/approx.csv` | `run_approx.py` |
+| 表 6（虚警） | `results/null.csv` | `run_support.py null --reps 6` |
+| 表 1（敏感性） | `results/sensitivity.csv` | `run_support.py sensitivity --reps 10` |
+| 图 5（分数示例） | 运行时生成 | `make_figures.py` |
+| 图 6（周期扫描） | `results/period.csv` | `run_support.py period --reps 8` |
+| 图 7（运行时间） | `results/runtime.csv` | `run_support.py runtime --reps 2` |
+| 附录表 B.8（18 方法全表） | `results/synthetic.csv` | 同上 |
 
-```cmd
-python CraftedData.py --length 1000 --peroid 16
-```
+## 复现注意事项
 
-to creat the synthetic datasets with the length of 1000 and the peroid of 16. 
-
-## Discrete cosine similarity (DCS)
-
-![](./pic/dca.png)
-
-![](./pic/modelxy.png)
-
-Let the CS series be denoted by $\boldsymbol{Y} = \\{ y_i \\}_ {1\leq i \leq L-2\tau+1 }$, where $y_i$ denotes the $i$-th CS value computed from the original series. With this scheme, we expect a smaller $y_i$ if change points exist in [ $\boldsymbol{\tilde{X_i}}$, $\boldsymbol{\tilde{X}_{i+\tau}}$]. Similarly,  $x_i$ is involved in calculating the elements in $\boldsymbol{\tilde{Y_i}}$, which means when we observe that a certain number of smaller $y$ in $\boldsymbol{\tilde{Y_i}}$, chances are that $x_i$ is a change point. $\boldsymbol{\tilde{S}_i}$ denotes the set of elements required to compute each CS value in $\boldsymbol{\tilde{Y}_i}$, which includes all elements ${x_j}$ such that $i - 2\tau + 1 \leq j \leq i + 2\tau - 1$. 
-
-## DCS-CPD
-
-The function to detect the change points is defined in **DCS_CPD.py**. 
-
-## Illustration of DCS-CPD for real-world datasets. 
-
-![](./pic/exp_realworld2.png)
-
-## Experiment results
-
-![](./pic/exp_detection.png)
-
-![](./pic/exp_detection_real.png)
-
-## Time efficiency
-
-DCS-CPD has a complexity of $\mathcal{O}(\tau L)$. 
-
-![](./pic/exp_time2.png)
-
+1. `run_synthetic.py` 默认用 6 个进程；PELT-RBF 在 polarity/period 族上单次约 22 秒，是耗时瓶颈。
+2. `run_real.py` 依赖 `CoDetect/` 中的数据文件（路径写死在 `ROOT` 变量）。若迁移目录，需同步修改该常量。
+3. HASC 记录长 39397 点，脚本按 4 倍抽样到 9850 点，标注与容差同步缩放，以免二次代价的检测器内存溢出。
+4. 所有随机性来自 `numpy.random.default_rng(seed)`，种子在脚本内以固定偏移生成，可逐次复算。
