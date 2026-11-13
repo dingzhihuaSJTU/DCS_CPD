@@ -31,9 +31,3 @@
 | 图 7（运行时间） | `results/runtime.csv` | `run_support.py runtime --reps 2` |
 | 附录表 B.8（18 方法全表） | `results/synthetic.csv` | 同上 |
 
-## 复现注意事项
-
-1. `run_synthetic.py` 默认用 6 个进程；PELT-RBF 在 polarity/period 族上单次约 22 秒，是耗时瓶颈。
-2. `run_real.py` 依赖 `CoDetect/` 中的数据文件（路径写死在 `ROOT` 变量）。若迁移目录，需同步修改该常量。
-3. HASC 记录长 39397 点，脚本按 4 倍抽样到 9850 点，标注与容差同步缩放，以免二次代价的检测器内存溢出。
-4. 所有随机性来自 `numpy.random.default_rng(seed)`，种子在脚本内以固定偏移生成，可逐次复算。
